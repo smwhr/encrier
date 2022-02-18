@@ -14,7 +14,7 @@ jobs:
       with:
         node-version: 16
     - name: install, build ink, build website
-      run: cd inkyweb && yarn && yarn build
+      run: cd inkyweb && yarn && yarn vite build
     - name: Deploy 🚀
       uses: JamesIves/github-pages-deploy-action@4.1.5
       with:
