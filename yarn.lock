@@ -794,9 +794,9 @@ has@^1.0.3:
   dependencies:
     function-bind "^1.1.1"
 
-"inkjs@git+https://github.com/smwhr/inkjs.git#compiler2":
+"inkjs@git+https://github.com/smwhr/inkjs.git#compiler":
   version "2.1.0"
-  resolved "git+https://github.com/smwhr/inkjs.git#e9f546aee010662aea6a06f27288ef2906c4071f"
+  resolved "git+https://github.com/smwhr/inkjs.git#6c27516a60755d0badefbe3e9c6d8b0bd4835022"
 
 is-core-module@^2.8.1:
   version "2.8.1"
