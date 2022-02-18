@@ -5,7 +5,7 @@ on:
       - main
 
 jobs:
-  build-binksi:
+  build-inkyweb:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -14,10 +14,10 @@ jobs:
       with:
         node-version: 16
     - name: install, build ink, build website
-      run: cd inkyweb && yarn && yarn vite build
+      run: yarn && yarn vite build
     - name: Deploy 🚀
       uses: JamesIves/github-pages-deploy-action@4.1.5
       with:
         branch: gh-pages # The branch the action should deploy to.
-        folder: inkyweb/dist # The folder the action should deploy.
+        folder: dist # The folder the action should deploy.
     
