@@ -20,8 +20,10 @@ code {
   grid-template-columns: 50% 50%;
 }
 
-.row *{
+.row > *{
   padding-left: 0.2em;
+  height: 100vh;
+  max-height: 100vh;
 }
 .row > *:last-child{
   border-left: 1px solid black;
@@ -30,6 +32,7 @@ code {
   color: #abb2bf;
   max-height: 100vh;
   overflow: auto;
+  padding-left: 0.2em;
 }
 p.tags{
   text-align: right;
@@ -45,3 +48,26 @@ p{
   opacity: 0;
 }
 a{color: #ccc;}
+
+
+@media screen and (max-width: 39.9375em) {
+  .row{
+    display: grid;
+    grid-template-columns: auto;
+    grid-template-rows: 50% 50%;
+  }
+  .row > * {
+    height: 50vh;
+    max-height: 50vh;
+    width: 100vw;
+  }
+  .row > *:last-child{
+    border-left: none;
+  }
+  .row > *:first-child{
+    border-bottom: 1px solid black;
+  }
+  .container{
+    max-height: 50vh;
+  }
+}

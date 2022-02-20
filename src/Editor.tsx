@@ -16,12 +16,12 @@ export const Editor: React.FC<{
 }> = ({setStory}) => {
 
     const defaultPrompt = `Once upon a time...
-
-    * There were two choices.
-    * There were four lines of content.
+    -(opts)
+    + There were two choices.
+    + There were four lines of content.
    
    - They lived happily ever after.
-       -> END
+       -> opts
    `
 
     const editor = useRef<HTMLDivElement>(null);
@@ -46,8 +46,8 @@ export const Editor: React.FC<{
         container: editor.current,
         extensions: [ inkLinter, lintGutter()],
         value: defaultPrompt,
-        minHeight: "100vh",
-        height: "100vh",
+        minHeight: "100%",
+        height: "100%",
         theme: 'dark',
         onChange: (value, viewUpdate) => {
             compileOnChange(value)
@@ -107,9 +107,7 @@ export const Editor: React.FC<{
     }, [editor.current]);
 
     return (
-        <div>
             <div ref={editor}></div>
-        </div>
     )
 
 }

@@ -1,130 +1,109 @@
 import { Story } from "inkjs/engine/Story"
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useReducer, useState, useLayoutEffect } from "react";
 
+interface Choice{
+    text: string;
+    index: number;
+}
+interface StoryState {
+    texts: string[];
+    choices: Choice[];
+}
+type ResetAction = { type: "reset";}
+type AddTextAction = { type: "add_text"; payload: string;}
+type AddChoiceAction = { type: "add_choice"; payload: Choice;}
+type ClearChoicesAction = { type: "clear_choices";}
+type StoryAction = ResetAction | AddTextAction | AddChoiceAction | ClearChoicesAction;
+
+const intialStoryState: StoryState = {texts: [], choices: []}
+
+function reducer(state: StoryState, action: StoryAction): StoryState {
+    switch (action.type) {
+      case 'reset':
+          return intialStoryState;
+      case 'add_text':
+        return {... state, texts : state.texts.concat(action.payload)};
+      case 'add_choice':
+        return {... state, choices : state.choices.concat(action.payload)};
+      case 'clear_choices':
+        return {... state, choices: []};
+      default:
+        throw new Error();
+    }
+  }
 
 export const Player: React.FC<{
     story: Story | null;
 }> = ({story}) => {
 
-    
+    const [storyState, dispatch] = useReducer(reducer, intialStoryState)
+    const [choiceHistory, setChoiceHistory] = useState<number[]>([])
 
     const container = useRef<HTMLDivElement>(null)
 
-    
-
     useEffect(() => {
-        if(story === null || container.current === null) return;
-        (async () => {
-            await continueStory(story, container.current!)
-        })()
+        if(story === null) return;
+        continueStory(story, dispatch)
 
         return () => {
-            if(container.current){
-                container.current.innerHTML = ""
+            dispatch({type: "reset"})
+        }
+    }, [story])
+
+    useLayoutEffect(() => {
+        if(story === null) return;
+        for(let ci of choiceHistory){
+            try{
+                story.ChooseChoiceIndex(ci);
+            }catch(e){
+                break;
             }
         }
     }, [story])
 
     if(story === null) return null;
 
+    const {texts, choices} = storyState;
+
+    const choiceOnChose = (index: number) => () => {
+        dispatch({type: "clear_choices"});
+        setChoiceHistory(choiceHistory.concat(index))
+        story.ChooseChoiceIndex(index);
+        continueStory(story, dispatch);
+    }
+
     return (
         <div>
             <div className="container" ref={container}>
+            {texts.map( (t, i) => (
+                <p key={i}>{t}</p>
+            ))}
+            {choices.length > 0 && (
+                choices.map(c => (
+                    <p className="choice" key={`choice-${c.index}`}>
+                        <a href="#" onClick={choiceOnChose(c.index)}>{c.index}. {c.text}</a>
+                    </p>
+                ))
+            )}
             </div>
         </div>
     )
 
 }
 
-
-
-async function scroll(container: HTMLElement){
-    var start = container.scrollTop;
-    var target = container.scrollHeight - container.clientHeight;
-
-    var dist = Math.max(0, target - start);
-    var duration = 300*dist/100;
-    var startTime: number|null = null;
-
-    let resolve: ((value?:unknown) => void) | null = null;
-    var promise = new Promise(r => {
-        resolve = r;
-    }) 
-    // debugger;
-    function step(time: number) {
-        if( startTime == null ) startTime = time;
-        var t = (time-startTime) / duration;
-        var lerp = 3*t*t - 2*t*t*t; // ease in/out
-        container.scrollTo(0, (1.0-lerp)*start + lerp*target);
-        if( t < 1 ){
-            requestAnimationFrame(step);
-        }else{
-            resolve && resolve();
-        }
-    }
-    requestAnimationFrame(step);
-    return promise;
-}
-
-async function wait(t: number){
-    return new Promise<void>(resolve => {
-        setTimeout(() => {  resolve(); 
-        }, t);
-    });
-}
-
-async function print(container: HTMLElement, message: string, classNames: string[] = [] , immediately: boolean = false){
-    var p = document.createElement('p');
-        p.classList.add(...classNames)
-        p.classList.add('invisible');
-        p.innerHTML = message;
-    container.appendChild(p);
-
-    return new Promise<void>(resolve => {
-        setTimeout(() => { 
-            p.classList.remove('invisible');
-            resolve(); 
-        }, immediately ? 0 : 300);
-    });
-}
-
-function removeAll(container: HTMLElement, selector: string)
-    {
-        var allElements = container.querySelectorAll(selector);
-        for(var i=0; i<allElements.length; i++) {
-            var el = allElements[i];
-            el.parentNode?.removeChild(el);
-        }
-    }
-
-async function continueStory(story: Story, container: HTMLElement){
+function continueStory(story: Story, dispatch: React.Dispatch<StoryAction>){
         while(story.canContinue) {
             var text = story.Continue() as string;
             var tags = story.currentTags;
-            await print(container, text)
-            if(tags && tags.length > 0){
-                await print(container, tags.map(t => `#${t}`).join(" "), ["tags"])
-            }
+            dispatch({type: "add_text", payload: text})
+            // if(tags && tags.length > 0){
+            //     await print(container, tags.map(t => `#${t}`).join(" "), ["tags"])
+            // }
         }
-        story.currentChoices.forEach(async function(choice, index) {
-
-            // Create paragraph with anchor element
-            var choiceElement = document.createElement('p');
-            choiceElement.classList.add("choice", "invisible");
-            choiceElement.innerHTML = `<a href='#'>${choice.text}</a>`
-            container.appendChild(choiceElement);
-            await scroll(container);
-            await wait(200 * index)
-            choiceElement.classList.remove("invisible")
-
-            // Click on choice
-            var choiceAnchorEl = choiceElement.querySelectorAll("a")[0];
-            choiceAnchorEl.addEventListener("click", function(event) {
-                event.preventDefault();
-
-                removeAll(container, ".choice")
-                story.ChooseChoiceIndex(choice.index);
-                continueStory(story, container);
-            });
+        story.currentChoices.forEach(function(choice, index) {
+            dispatch({type: "add_choice", payload:{
+                "text": choice.text,
+                "index": choice.index
+            }})
         });
     }
