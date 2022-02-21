@@ -32,7 +32,16 @@ code {
   color: #abb2bf;
   max-height: 100vh;
   overflow: auto;
-  padding-left: 0.2em;
+  padding-left: 2em;
+  padding-right: 2em;
+  /* scroll-behavior: smooth; */
+}
+p.choice{
+  text-align: center;
+}
+p.choice a{
+  text-decoration: none;
+  color: #fff;
 }
 p.tags{
   text-align: right;
@@ -41,12 +50,21 @@ p.tags{
   font-family: monospace;
 }
 p{
-  opacity: 1;
-  transition: opacity 400ms;
+  animation-duration: 2s;
+  animation-name: appear;
+  animation-fill-mode: backwards;
+  animation-delay: 300ms;
 }
-.invisible{
-  opacity: 0;
+
+@keyframes appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
+
 a{color: #ccc;}
 
 

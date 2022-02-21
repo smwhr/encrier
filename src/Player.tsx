@@ -1,19 +1,28 @@
 import { Story } from "inkjs/engine/Story"
 import { useEffect, useRef, useReducer, useState, useLayoutEffect } from "react";
 
-interface Choice{
-    text: string;
-    index: number;
-}
+interface Choice{text: string;index: number;delay: number;}
+const Choice = (text: string, index: number): Choice => ({text, index, delay: 0})
 interface StoryState {
-    texts: string[];
+    texts: Text[];
     choices: Choice[];
 }
+
+type Text = {text: string;classList: string[];delay: number;}
+const Text = (text: string, classList:string[] = []): Text => ({text, classList, delay:0})
+
 type ResetAction = { type: "reset";}
-type AddTextAction = { type: "add_text"; payload: string;}
+type AddTextAction = { type: "add_text"; payload: Text;}
+type DelayTextAction = { type: "delay_text"; payload: {index: number; delay: number};}
 type AddChoiceAction = { type: "add_choice"; payload: Choice;}
+type DelayChoiceAction = { type: "delay_choice"; payload: {index: number; delay: number};}
 type ClearChoicesAction = { type: "clear_choices";}
-type StoryAction = ResetAction | AddTextAction | AddChoiceAction | ClearChoicesAction;
+type StoryAction = ResetAction 
+                 | AddTextAction 
+                 | DelayTextAction 
+                 | AddChoiceAction 
+                 | DelayChoiceAction
+                 | ClearChoicesAction;
 
 const intialStoryState: StoryState = {texts: [], choices: []}
 
@@ -23,8 +32,18 @@ function reducer(state: StoryState, action: StoryAction): StoryState {
           return intialStoryState;
       case 'add_text':
         return {... state, texts : state.texts.concat(action.payload)};
+      case 'delay_text':
+          const {index: textIndex, delay: textDelay} = action.payload;
+          const currentTexts =  state.texts;
+                currentTexts[textIndex].delay = textDelay
+            return {... state, texts : currentTexts};
       case 'add_choice':
         return {... state, choices : state.choices.concat(action.payload)};
+        case 'delay_choice':
+            const {index: choiceIndex, delay: choiceDelay} = action.payload;
+            const currentChoices =  state.choices;
+                    currentChoices[choiceIndex].delay = choiceDelay
+              return {... state, choices : currentChoices};
       case 'clear_choices':
         return {... state, choices: []};
       default:
@@ -38,34 +57,69 @@ export const Player: React.FC<{
 
     const [storyState, dispatch] = useReducer(reducer, intialStoryState)
     const [choiceHistory, setChoiceHistory] = useState<number[]>([])
+    const storyStateRef = useRef(storyState.texts);
 
     const container = useRef<HTMLDivElement>(null)
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if(story === null) return;
-        continueStory(story, dispatch)
-
+        for(let ci of choiceHistory){
+            try{
+                continueStory(story, dispatch, ci)
+            }catch(e){
+                console.log(`Could not choose ${ci}`)
+                setChoiceHistory(choiceHistory.slice(
+                    0,
+                    choiceHistory.indexOf(ci)
+                ))
+                break;
+            }
+        }
+        continueStory(story, dispatch);
         return () => {
             dispatch({type: "reset"})
         }
     }, [story])
 
     useLayoutEffect(() => {
-        if(story === null) return;
-        for(let ci of choiceHistory){
-            try{
-                story.ChooseChoiceIndex(ci);
-            }catch(e){
-                break;
+        if(container.current === null) return;
+
+        const prev = storyStateRef.current;
+        const current = storyState.texts;
+
+        let i = 0;
+        for(let t of current){ 
+            const prevPosition = prev.indexOf(t);
+            if(prevPosition === -1){
+                const index = current.indexOf(t);
+                const delay = i*200;
+                dispatch({type: "delay_text", payload: {index, delay}})
+                i++;
             }
         }
-    }, [story])
+        
+        for(let c of choices){ 
+            if(c.delay > 0) continue;
+            const index = choices.indexOf(c);
+            const delay = i*200;
+            dispatch({type: "delay_choice", payload: {index, delay}})
+            i++;
+        }
+        
+        storyStateRef.current = current;
+
+        const lastEl = container.current.querySelector("p:last-child");
+        if(lastEl){
+            lastEl.scrollIntoView();//{behavior: "smooth", block: "end", inline: "nearest"});
+        }
+
+    }, [story, storyState.texts, storyState.choices])
 
     if(story === null) return null;
 
     const {texts, choices} = storyState;
 
-    const choiceOnChose = (index: number) => () => {
+    const choiceOnChoose = (index: number) => () => {
         dispatch({type: "clear_choices"});
         setChoiceHistory(choiceHistory.concat(index))
         story.ChooseChoiceIndex(index);
@@ -76,12 +130,22 @@ export const Player: React.FC<{
         <div>
             <div className="container" ref={container}>
             {texts.map( (t, i) => (
-                <p key={i}>{t}</p>
+                <p key={i}
+                    style={{
+                        animationDelay: t.delay + 200 + 'ms'
+                    }}
+                >{t.text}</p>
             ))}
             {choices.length > 0 && (
                 choices.map(c => (
-                    <p className="choice" key={`choice-${c.index}`}>
-                        <a href="#" onClick={choiceOnChose(c.index)}>{c.index}. {c.text}</a>
+                    <p 
+                      key={`choice-${choiceHistory.length}-${c.index}`}
+                      className="choice" 
+                      style={{
+                            animationDelay: c.delay + 200 + 'ms'
+                        }}
+                        >
+                        <a href="#" onClick={choiceOnChoose(c.index)}>{c.text}</a>
                     </p>
                 ))
             )}
@@ -91,19 +155,26 @@ export const Player: React.FC<{
 
 }
 
-function continueStory(story: Story, dispatch: React.Dispatch<StoryAction>){
+function continueStory(story: Story, dispatch: React.Dispatch<StoryAction>, immediatelyChose?:number){
         while(story.canContinue) {
             var text = story.Continue() as string;
             var tags = story.currentTags;
-            dispatch({type: "add_text", payload: text})
-            // if(tags && tags.length > 0){
-            //     await print(container, tags.map(t => `#${t}`).join(" "), ["tags"])
-            // }
+            dispatch({type: "add_text", payload: Text(text)})
+            if(tags && tags.length > 0){
+                dispatch({type: "add_text", payload: Text(
+                        tags.map(t => `#${t}`).join(" "),
+                        ["tags"]
+                )})
+            }
+        }
+
+        if(immediatelyChose !== undefined){
+            story.ChooseChoiceIndex(immediatelyChose);
+            return;
         }
         story.currentChoices.forEach(function(choice, index) {
-            dispatch({type: "add_choice", payload:{
-                "text": choice.text,
-                "index": choice.index
-            }})
+            dispatch({type: "add_choice", 
+                      payload: Choice(choice.text, choice.index)
+                    })
         });
     }

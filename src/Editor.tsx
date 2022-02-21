@@ -17,10 +17,11 @@ export const Editor: React.FC<{
 
     const defaultPrompt = `Once upon a time...
     -(opts)
-    + There were two choices.
-    + There were four lines of content.
+    + Choice A.
+    + Choice B.
+    + Choice C.
    
-   - They lived happily ever after.
+   - They lived happily ever after {opts}.
        -> opts
    `
 
