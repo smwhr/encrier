@@ -1,8 +1,12 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { EditorView, useCodeMirror } from '@uiw/react-codemirror';
+import { EditorState, EditorView, useCodeMirror } from '@uiw/react-codemirror';
 import {linter, lintGutter, Diagnostic, forceLinting} from "@codemirror/lint"
-import { Compiler, CompilerOptions } from 'inkjs';
+import {showPanel, Panel} from "@codemirror/panel"
 
+import { Compiler, CompilerOptions } from 'inkjs/compiler/Compiler';
+import { Story as ParsedStory } from "inkjs/compiler/Parser/ParsedHierarchy/Story";
+
+const isIterable = (x: unknown): boolean => !!x?.[Symbol.iterator];
 interface Issue{
     type: "ERROR"|"WARNING"|"RUNTIME ERROR"|"RUNTIME WARNING"|"TODO";
     filename: string;
@@ -15,7 +19,8 @@ export const Editor: React.FC<{
     setStory: any;
 }> = ({setStory}) => {
 
-    const defaultPrompt = `Once upon a time...
+    const defaultPrompt = `LIST letters = a,b,c
+    Once upon a time...
     -(opts)
     + Choice A.
     + Choice B.
@@ -27,6 +32,7 @@ export const Editor: React.FC<{
 
     const editor = useRef<HTMLDivElement>(null);
     const [parseErrors, setParseErrors] = useState<Issue[]>([])
+    const [parsedStory, setParsedStory] = useState<ParsedStory>();
 
     const inkLinter = linter( (view: EditorView) => {
         return parseErrors.map(pe => {
@@ -42,10 +48,93 @@ export const Editor: React.FC<{
         })
     })
 
+    const locate = (state: EditorState): string[]|null => {
+        if(parsedStory === undefined) return ["Could not parse story"];
+        
+        const range = state.selection.ranges[0];
+        let line = state.doc.lineAt(range.head)
+        let lineIndex = line.number;
+        let charInLineIndex = (range.head - line.from)
+
+        const eltIsEmpty = (elt: any) => (elt.GetType() == "Text" && elt.text == "\n")
+
+        const cursorInElement = (lineIndex: number, charInLineIndex: number, dm: any) => (
+            lineIndex >= dm.startLineNumber && lineIndex <= dm.endLineNumber
+                    && ( 
+                        dm.startLineNumber != dm.endLineNumber && (
+                                lineIndex == dm.startLineNumber && charInLineIndex >= dm.startCharacterNumber
+                            || lineIndex == dm.endLineNumber && charInLineIndex < dm.endCharacterNumber   
+                            || lineIndex > dm.startLineNumber && lineIndex < dm.endLineNumber
+                        )
+                     || dm.startLineNumber == dm.endLineNumber && (
+                        charInLineIndex >= dm.startCharacterNumber && charInLineIndex < dm.endCharacterNumber
+                        )
+                    )
+        )
+
+
+        const _locate = (subHierarchy: any, accumulator: any[] = []): any[]|null => {
+            if(subHierarchy.debugMetadata !== null && !cursorInElement(lineIndex, charInLineIndex, subHierarchy.debugMetadata)){
+                return null;
+            }
+
+            if(    !isIterable(subHierarchy.content) 
+                || subHierarchy.content.length == 0
+                ){
+                const dm = subHierarchy.debugMetadata;
+                if(dm === null){
+                    return null;
+                }
+
+                if( cursorInElement(lineIndex, charInLineIndex, dm)){
+                    const newAcc = [...accumulator].concat(subHierarchy)
+                    return newAcc;
+                }
+
+                return null;
+            }
+
+            const children = subHierarchy.content
+            //TODO : add other children
+
+            for(let c of children){
+                const newAcc = [...accumulator].concat(subHierarchy)
+                const found = _locate(c, newAcc)
+                if(found === null) continue;
+
+                if(found.length > 0 && eltIsEmpty(found[found.length-1])){
+                    found.splice(-1, 1)
+                }
+                return found;
+                
+            }
+            return [...accumulator].concat(subHierarchy);
+        }
+
+        const located  = _locate(parsedStory);
+        console.log(located)
+        return located?.map(e => e.GetType()) || []
+    }
+
+    function hierarchyPanel(view: EditorView): Panel {
+        let dom = document.createElement("div")
+        dom.textContent = "Story compiled successfully";
+        return {
+          dom,
+          update(update) {
+            if (update.selectionSet)
+              dom.textContent = locate(view.state)?.join(" > ") || "Could not parse at position"
+          }
+        }
+      }
+
       
     const { setContainer } = useCodeMirror({
         container: editor.current,
-        extensions: [ inkLinter, lintGutter()],
+        extensions: [ inkLinter, 
+                      lintGutter(),
+                      showPanel.of(hierarchyPanel)
+                    ],
         value: defaultPrompt,
         minHeight: "100%",
         height: "100%",
@@ -90,8 +179,11 @@ export const Editor: React.FC<{
         const compiler = new Compiler(ink, options)
         try{
             const story = compiler.Compile();
+            const parsedStory = compiler.parsedStory;
+            setParsedStory(parsedStory)
             setStory(story)
         }catch(e){
+            setParsedStory(undefined);
             console.error(e)
         }finally{
             setParseErrors(errors)
@@ -108,7 +200,7 @@ export const Editor: React.FC<{
     }, [editor.current]);
 
     return (
-            <div ref={editor}></div>
+        <div className="editor" ref={editor}></div>
     )
 
 }

@@ -1,5 +1,5 @@
 import { Story } from "inkjs/engine/Story"
-import { useEffect, useRef, useReducer, useState, useLayoutEffect } from "react";
+import { useRef, useReducer, useState, useLayoutEffect, MouseEvent } from "react";
 
 interface Choice{text: string;index: number;delay: number;}
 const Choice = (text: string, index: number): Choice => ({text, index, delay: 0})
@@ -110,7 +110,7 @@ export const Player: React.FC<{
 
         const lastEl = container.current.querySelector("p:last-child");
         if(lastEl){
-            lastEl.scrollIntoView();//{behavior: "smooth", block: "end", inline: "nearest"});
+            lastEl.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
         }
 
     }, [story, storyState.texts, storyState.choices])
@@ -119,7 +119,8 @@ export const Player: React.FC<{
 
     const {texts, choices} = storyState;
 
-    const choiceOnChoose = (index: number) => () => {
+    const choiceOnChoose = (index: number) => (event: MouseEvent<HTMLAnchorElement>) => {
+        event.preventDefault();
         dispatch({type: "clear_choices"});
         setChoiceHistory(choiceHistory.concat(index))
         story.ChooseChoiceIndex(index);
@@ -127,8 +128,7 @@ export const Player: React.FC<{
     }
 
     return (
-        <div>
-            <div className="container" ref={container}>
+        <div className="container" ref={container}>
             {texts.map( (t, i) => (
                 <p key={i}
                     style={{
@@ -149,7 +149,8 @@ export const Player: React.FC<{
                     </p>
                 ))
             )}
-            </div>
+            <p></p>
+        
         </div>
     )
 
