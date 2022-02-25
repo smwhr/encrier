@@ -15,6 +15,48 @@ code {
     monospace;
 }
 
+.warningIcon {
+  display: block;
+  background-image: url('icons/warning.png');
+  background-size: 16px;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+.warningLineDecoration {
+	background: #f5dc3c;
+	width: 5px !important;
+	margin-left: 3px;
+}
+
+.errorIcon {
+  display: block;
+  background-image: url('icons/error.png');
+  background-size: 15px;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+.errorLineDecoration {
+	background: #df4f5f;
+	width: 5px !important;
+	margin-left: 3px;
+}
+
+.infoIcon {
+  display: block;
+  background-image: url('icons/info.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+.infoLineDecoration {
+	background: #2096f3;
+	width: 5px !important;
+	margin-left: 3px;
+}
+
+.monaco-editor .monaco-hover{
+  padding: 0.1em 0.3em;
+}
+
 .row{
   display: grid;
   grid-template-columns: 50% 50%;
