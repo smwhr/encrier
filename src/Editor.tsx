@@ -14,8 +14,10 @@ import { JsonFileHandler } from './Editor/FileHandler';
 
 
 export const Editor: React.FC<{
+    className?: string;
     setStory: any;
-}> = ({setStory}) => {
+    showFileManager: boolean;
+}> = ({setStory, className, showFileManager}) => {
 
     const defaultPrompt = `LIST letters = a,b,c
     Once upon a time...
@@ -44,11 +46,6 @@ Another castle
     const [decorations, setDecorations] = useState([])
 
     const [fileHandler, setFileHandler] = useState(new JsonFileHandler({'inmemory://model/1': defaultPrompt}))
-    const [showFileManager, setFileManager] = useState(false);
-
-    const toggleFileManager = () => {
-      setFileManager(!showFileManager);
-    }
 
     /*
      * Decorate gutter and lines on error
@@ -64,9 +61,9 @@ Another castle
               glyphMarginClassName: e.type.includes("ERROR") ? 'errorIcon' 
                                   : e.type.includes("WARNING") ? 'warningIcon' 
                                   : 'infoIcon',
-              linesDecorationsClassName: e.type.includes("ERROR") ? 'errorLineDecoration' 
-                                       : e.type.includes("WARNING") ? 'warningLineDecoration' 
-                                       : 'infoLineDecoration',
+              // linesDecorationsClassName: e.type.includes("ERROR") ? 'errorLineDecoration' 
+              //                          : e.type.includes("WARNING") ? 'warningLineDecoration' 
+              //                          : 'infoLineDecoration',
               glyphMarginHoverMessage: {value: e.msg}
             }
           }
@@ -224,37 +221,25 @@ Another castle
     
     const editorLeft = 48 + (showFileManager ? 120 : 0)
     return (
-      <div className="monaco-split-view2" style={{padding: 0}}>
-        <div className="monaco-scrollable-element">
-          <div className="split-view-container">
-            <ActionBar 
-                toggleFileManager={toggleFileManager} 
-            />
+      <div className={`editor-wrapper ${className} ${showFileManager ? 'with-filemanager' : ''}`}>
             <FileManager visible={showFileManager} fileHandler={fileHandler}/>
 
-            <div className="split-view-view visible"
-              style={{
-                left: `${editorLeft}px`, 
-                width: `calc( 100% - ${editorLeft}px )`,
-                height: '100%'
+            <MonacoEditor
+              className="editor"
+              theme="vs-dark"
+              height="100%"
+              width="auto"
+              defaultValue={ink}
+              language="ink"
+              onChange={onChange}
+              onMount={handleEditorDidMount}
+              options={{
+                glyphMargin: true,
+                lineDecorationsWidth: 2,
+                lineNumbers: 'off'
               }}
-            >
-              <MonacoEditor
-                className="editor"
-                theme="vs-dark"
-                height="100%"
-                width="auto"
-                defaultValue={ink}
-                language="ink"
-                onChange={onChange}
-                onMount={handleEditorDidMount}
-                options={{
-                  glyphMargin: true
-                }}
-              />
-            </div>
-          </div>
-        </div>
+              
+            />
       </div>
     )
 

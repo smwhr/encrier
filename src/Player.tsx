@@ -1,5 +1,5 @@
 import { Story } from "inkjs/engine/Story"
-import { useRef, useReducer, useState, useLayoutEffect, MouseEvent } from "react";
+import { useRef, useReducer, useState, useLayoutEffect, useEffect, MouseEvent } from "react";
 
 interface Choice{text: string;index: number;delay: number;}
 const Choice = (text: string, index: number): Choice => ({text, index, delay: 0})
@@ -53,19 +53,37 @@ function reducer(state: StoryState, action: StoryAction): StoryState {
 
 export const Player: React.FC<{
     story: Story | null;
-}> = ({story}) => {
+    className?: string;
+}> = ({story, className}) => {
 
+    const [playedStory, setPlayedStory] = useState<Story|null>(story);
     const [storyState, dispatch] = useReducer(reducer, intialStoryState)
     const [choiceHistory, setChoiceHistory] = useState<number[]>([])
     const storyStateRef = useRef(storyState.texts);
 
     const container = useRef<HTMLDivElement>(null)
 
+    const rewindHistory = () => {
+        if(playedStory === null) return;
+        const newHistory = choiceHistory.slice(0, -1);
+        console.log("rewind", newHistory)
+        playedStory.ResetState()
+        setChoiceHistory(newHistory)
+        setPlayedStory(playedStory)
+    }
+
+    useEffect(() => {
+        if(story !== null){
+            setPlayedStory(story)
+        }
+    }, [story])
+
     useLayoutEffect(() => {
-        if(story === null) return;
+        if(playedStory === null) return;
         for(let ci of choiceHistory){
             try{
-                continueStory(story, dispatch, ci)
+                console.log("autopilot", ci)
+                continueStory(playedStory, dispatch, ci)
             }catch(e){
                 console.log(`Could not choose ${ci}`)
                 setChoiceHistory(choiceHistory.slice(
@@ -75,11 +93,11 @@ export const Player: React.FC<{
                 break;
             }
         }
-        continueStory(story, dispatch);
+        continueStory(playedStory, dispatch);
         return () => {
             dispatch({type: "reset"})
         }
-    }, [story])
+    }, [playedStory])
 
     useLayoutEffect(() => {
         if(container.current === null) return;
@@ -113,9 +131,9 @@ export const Player: React.FC<{
             lastEl.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
         }
 
-    }, [story, storyState.texts, storyState.choices])
+    }, [playedStory, storyState.texts, storyState.choices])
 
-    if(story === null) return null;
+    if(playedStory === null) return null;
 
     const {texts, choices} = storyState;
 
@@ -123,34 +141,47 @@ export const Player: React.FC<{
         event.preventDefault();
         dispatch({type: "clear_choices"});
         setChoiceHistory(choiceHistory.concat(index))
-        story.ChooseChoiceIndex(index);
-        continueStory(story, dispatch);
+        playedStory.ChooseChoiceIndex(index);
+        continueStory(playedStory, dispatch);
     }
 
     return (
-        <div className="container" ref={container}>
-            {texts.map( (t, i) => (
-                <p key={i}
-                    style={{
-                        animationDelay: t.delay + 200 + 'ms'
-                    }}
-                >{t.text}</p>
-            ))}
-            {choices.length > 0 && (
-                choices.map(c => (
-                    <p 
-                      key={`choice-${choiceHistory.length}-${c.index}`}
-                      className="choice" 
-                      style={{
-                            animationDelay: c.delay + 200 + 'ms'
+        <div className="player-wrapper">
+            <div className="toolbar ">
+                <div className="actions-container">
+                    <div className="action-item icon">
+                        <a className="action-label codicon codicon-debug-step-back" 
+                                style={{color: "rgb(248, 248, 242)"}}
+                                onClick={rewindHistory}
+                        ></a>
+                    </div>
+                </div>
+                
+            </div>
+            <div className={`container ${className}`} ref={container}>
+                {texts.map( (t, i) => (
+                    <p key={i}
+                        style={{
+                            animationDelay: t.delay + 200 + 'ms'
                         }}
-                        >
-                        <a href="#" onClick={choiceOnChoose(c.index)}>{c.text}</a>
-                    </p>
-                ))
-            )}
-            <p></p>
-        
+                    >{t.text}</p>
+                ))}
+                {choices.length > 0 && (
+                    choices.map(c => (
+                        <p 
+                        key={`choice-${choiceHistory.length}-${c.index}`}
+                        className="choice" 
+                        style={{
+                                animationDelay: c.delay + 200 + 'ms'
+                            }}
+                            >
+                            <a href="#" onClick={choiceOnChoose(c.index)}>{c.text}</a>
+                        </p>
+                    ))
+                )}
+                <p></p>
+            
+            </div>
         </div>
     )
 
