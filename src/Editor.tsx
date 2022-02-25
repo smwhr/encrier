@@ -7,6 +7,10 @@ import { Knot } from 'inkjs/compiler/Parser/ParsedHierarchy/Knot';
 import { isKnot, languageSuggestions } from './Editor/ink-language';
 import { ActionBar } from './Editor/ActionBar';
 import { FileManager } from './Editor/FileManager';
+import { Story } from 'inkjs/engine/Story';
+import { saveAs } from './Editor/saveAs';
+import { openFile } from './Editor/openFile';
+import { JsonFileHandler } from './Editor/FileHandler';
 
 
 export const Editor: React.FC<{
@@ -33,11 +37,13 @@ Another castle
     const editorRef = useRef<any>(null);
 
     const [ink, setInk] = useState<string>(defaultPrompt)
+    const [innerStory, setInnerStory] = useState<Story>()
     const [parsedStory, setParsedStory] = useState<ParsedStory>()
     const [parseErrors, setParseErrors] = useState<Issue[]>()
 
     const [decorations, setDecorations] = useState([])
 
+    const [fileHandler, setFileHandler] = useState(new JsonFileHandler({'inmemory://model/1': defaultPrompt}))
     const [showFileManager, setFileManager] = useState(false);
 
     const toggleFileManager = () => {
@@ -55,13 +61,13 @@ Another castle
             range: new monaco.Range(e.lineNumber, 1, e.lineNumber, 1),
             options: {
               isWholeLine: true,
-              // glyphMarginClassName: e.type.includes("ERROR") ? 'errorIcon' 
-              //                     : e.type.includes("WARNING") ? 'warningIcon' 
-              //                     : 'infoIcon',
-              // linesDecorationsClassName: e.type.includes("ERROR") ? 'errorLineDecoration' 
-              //                          : e.type.includes("WARNING") ? 'warningLineDecoration' 
-              //                          : 'infoLineDecoration',
-              // hoverMessage: {value: e.msg}
+              glyphMarginClassName: e.type.includes("ERROR") ? 'errorIcon' 
+                                  : e.type.includes("WARNING") ? 'warningIcon' 
+                                  : 'infoIcon',
+              linesDecorationsClassName: e.type.includes("ERROR") ? 'errorLineDecoration' 
+                                       : e.type.includes("WARNING") ? 'warningLineDecoration' 
+                                       : 'infoLineDecoration',
+              glyphMarginHoverMessage: {value: e.msg}
             }
           }
         })
@@ -122,8 +128,12 @@ Another castle
     }, [monaco, parsedStory])
 
     useEffect(() => {
-        const {story, parsedStory, parseErrors}  = useCompiler(ink)
-        if(story) setStory(story);
+        const {story, parsedStory, parseErrors}  = useCompiler(ink, {fileHandler})
+        if(story){
+          setStory(story);
+          setInnerStory(story);
+        }
+
         setParsedStory(parsedStory);
         setParseErrors(parseErrors);
     }, [ink, monaco, editorRef])
@@ -131,11 +141,85 @@ Another castle
     const onChange = (value: string | undefined) => {
       if(value) setInk(value);
     }
+
+    const openInk = (editor: any, monaco: any) => () => {
+      openFile().then( ({filename, content}) => {
+        console.log(content)
+        var newmodel = monaco.editor.createModel(content, "ink", `inmemory://model/${filename}`);
+        const model = editor.getModel();
+        model.dispose()
+        editor.setModel(newmodel)
+        fileHandler.delete(`${model.uri}`)
+                   .update(`${newmodel.uri}`, ink)
+        setInk(content as string)
+        setFileHandler(fileHandler);
+      })
+    }
+
+    const exportJson = () => {
+      if(innerStory){
+        const blob = new Blob([innerStory.ToJson() as string], { type: "application/json" });
+        saveAs(blob, "main.ink.json");
+      }else{
+        alert("There are errors to fix first.")
+      }
+    }
+
+    const exportInk = () => {
+      if(ink){
+        const blob = new Blob([ink as string], { type: "text/plain" });
+        saveAs(blob, "main.ink");
+      }else{
+        alert("File is empty")
+      }
+    }
+
+    useEffect(() => {
+      if(!editorRef.current) return;
+      if(!monaco) return;
+      const editor = editorRef.current;
+
+      const save_json_action = editor.addAction({
+        id: "save_json",
+        label: "Save as JSON",
+        keybindings: [
+            monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KEY_S,
+        ],
+        run: exportJson
+      })
+
+      const save_story_action = editor.addAction({
+        id: "save_story",
+        label: "Save story",
+        keybindings: [
+          monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S,
+        ],
+        run: exportInk
+      })
+
+      const open_story_action = editor.addAction({
+        id: "open_story",
+        label: "Open story (ink)",
+        keybindings: [
+          monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KEY_O,
+          monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_O,
+        ],
+        run: openInk(editor, monaco)
+      })
+      
+      return () => {
+        save_json_action.dispose()
+        save_story_action.dispose()
+        open_story_action.dispose()
+      }
+    }, [editorRef, innerStory, ink])
+
     const handleEditorDidMount = (editor: any, monaco: any) => {
       editorRef.current = editor; 
       monaco.languages.register({
         id: 'ink'
       });
+
     }
     
     const editorLeft = 48 + (showFileManager ? 120 : 0)
@@ -146,7 +230,7 @@ Another castle
             <ActionBar 
                 toggleFileManager={toggleFileManager} 
             />
-            <FileManager visible={showFileManager} />
+            <FileManager visible={showFileManager} fileHandler={fileHandler}/>
 
             <div className="split-view-view visible"
               style={{

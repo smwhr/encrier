@@ -8,6 +8,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
 }
 
 code {
@@ -53,7 +54,7 @@ code {
 	margin-left: 3px;
 }
 
-.left-bar{
+.left-bar, .files-bar{
   background-color: #272822;
 }
 .left-bar .monaco-action-bar .action-item .codicon{
@@ -95,6 +96,37 @@ code {
   content: "\ea73";
 }
 
+.files-bar{
+  box-sizing: border-box;
+  padding: 0.5em 0.25em;
+  border-left: thin solid black;
+}
+.files-bar .monaco-list-row{
+  position: relative;
+  cursor: pointer;
+}
+.files-bar .monaco-icon-label{
+  color: #ccc;
+  font-size: 0.8em;
+}
+.files-bar .monaco-icon-label:before {
+  background-size: 16px;
+  background-position: 0;
+  background-repeat: no-repeat;
+  padding-right: 6px;
+  width: 16px;
+  height: 22px;
+  line-height: inherit!important;
+  display: inline-block;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  vertical-align: top;
+  flex-shrink: 0;
+  font-family: 'codicon';
+  content: "\ea73";
+  text-align: center;
+}
+
 .row{
   display: grid;
   grid-template-columns: 50% 50%;
@@ -109,6 +141,7 @@ code {
   border-left: 1px solid black;
 }
 .container{
+  box-sizing: border-box;
   color: #abb2bf;
   max-height: 100vh;
   overflow: auto;

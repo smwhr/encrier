@@ -2,9 +2,13 @@ import { useState } from 'react';
 import { Compiler, CompilerOptions } from 'inkjs/compiler/Compiler';
 import { Story } from "inkjs/engine/Story";
 import { Story as ParsedStory } from "inkjs/compiler/Parser/ParsedHierarchy/Story";
+import { IFileHandler } from 'inkjs/compiler/IFileHandler';
+import { FileHandlerError } from './FileHandler';
 
 
-export const useCompiler = (ink: string):{
+export const useCompiler = (ink: string, options:{
+    fileHandler?:IFileHandler
+}):{
     story: Story|undefined; 
     parsedStory: ParsedStory|undefined;
     parseErrors: Issue[];
@@ -42,13 +46,16 @@ export const useCompiler = (ink: string):{
     }
 
 
-    const options = new CompilerOptions(null,[],false, errorHandler,null)
-    const compiler = new Compiler(ink, options)
+    const compilerOptions = new CompilerOptions(null,[],false, errorHandler, options.fileHandler)
+    const compiler = new Compiler(ink, compilerOptions)
     try{
         const story = compiler.Compile();
         const parsedStory = compiler.parsedStory;
         return {story, parsedStory, parseErrors}
     }catch(e){
+        if(e instanceof FileHandlerError){
+            errorHandler(e.message, 2)
+        }
         return {story: undefined, parsedStory: undefined, parseErrors}
     }
 }

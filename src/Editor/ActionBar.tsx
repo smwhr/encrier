@@ -19,7 +19,6 @@ export const ActionBar = (props:{toggleFileManager: any}) => {
                         role="tab">
                         <a className="action-label codicon codicon-edit-icon" 
                             style={{color: "rgb(248, 248, 242)"}}
-                            onClick={toggleFileManager}
                         ></a>
                         <div className="active-item-indicator"></div>
                     </li>
