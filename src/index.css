@@ -53,8 +53,46 @@ code {
 	margin-left: 3px;
 }
 
+.left-bar{
+  background-color: #272822;
+}
+.left-bar .monaco-action-bar .action-item .codicon{
+  width: 48px; height: 48px;
+}
+.left-bar .monaco-action-bar .action-label{
+  padding: 0;
+}
 .monaco-editor .monaco-hover{
   padding: 0.1em 0.3em;
+}
+.monaco-action-bar .actions-container {
+  display: flex;
+  margin: 0 auto;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+}
+.monaco-action-bar .action-item{
+  display: block;
+  position: relative;
+}
+.action-label.codicon{
+  font-size: 24px;
+  align-items: center;
+  justify-content: center;
+}
+.codicon-search-view-icon:before {
+  content: '\ea6d';
+}
+.codicon-explorer-view-icon:before {
+  content: '\eaf0';
+}
+.codicon-play-icon:before {
+  content: "\ebd0";
+}
+.codicon-edit-icon:before {
+  content: "\ea73";
 }
 
 .row{
@@ -120,12 +158,14 @@ a{color: #ccc;}
     display: grid;
     grid-template-columns: auto;
     grid-template-rows: 50% 50%;
+    width: 100%;
     /* max-height: 100vh; */
   }
   .row > * {
     height: 50vh;
     max-height: 50vh;
     width: 100vw;
+    max-width: 100%;
   }
   .row > *:last-child{
     border-left: none;
