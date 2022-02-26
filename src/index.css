@@ -112,7 +112,6 @@ code {
 }
 
 .row > *{
-  padding-left: 0.2em;
   height: 100vh;
   max-height: 100vh;
 }
@@ -173,6 +172,11 @@ p{
   animation-delay: 300ms;
 }
 
+p.no-animation{
+  animation: none;
+  opacity: 1;
+}
+
 @keyframes appear {
   from {
     opacity: 0;
@@ -196,5 +200,8 @@ a{color: #ccc;}
   }
   .row{
     grid-template-columns: 48px auto;
+  }
+  .editor-wrapper{
+    grid-template-columns: 0% calc(100vw - 48px);
   }
 }

@@ -219,7 +219,6 @@ Another castle
 
     }
     
-    const editorLeft = 48 + (showFileManager ? 120 : 0)
     return (
       <div className={`editor-wrapper ${className} ${showFileManager ? 'with-filemanager' : ''}`}>
             <FileManager visible={showFileManager} fileHandler={fileHandler}/>
@@ -228,7 +227,7 @@ Another castle
               className="editor"
               theme="vs-dark"
               height="100%"
-              width="auto"
+              width="100%"
               defaultValue={ink}
               language="ink"
               onChange={onChange}
