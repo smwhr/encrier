@@ -28,7 +28,7 @@ export const ActionBar = ({toggleFileManager, playerActive, setPlayerActive, edi
                         ></a>
                         <div className="active-item-indicator"></div>
                     </li>
-                    {editorActive&& <li className="action-item icon" 
+                    {editorActive && <li className="action-item icon" 
                         role="tab">
                         <a className="action-label codicon codicon-explorer-view-icon" 
                             style={{color: "rgb(248, 248, 242)"}}

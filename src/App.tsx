@@ -7,11 +7,10 @@ import { Story } from 'inkjs'
 import { ActionBar } from './Editor/ActionBar'
 
 function App() {
-  const [count, setCount] = useState(0)
   const [story, setStory] = useState(null)
 
-  const [playerActive, setPlayerActive] = useState(true)
-  const [editorActive, setEditorActive] = useState(false)
+  const [playerActive, setPlayerActive] = useState(false)
+  const [editorActive, setEditorActive] = useState(true)
   const [showFileManager, setFileManager] = useState(false);
 
   const toggleFileManager = () => {

@@ -62,7 +62,7 @@ function reducer(state: StoryState, action: StoryAction): StoryState {
                     delayIndex: state.delayIndex+1
                   };
       case 'clear_choices':
-        return {... state, choices: []};
+        return {... state, choices: [], delayIndex: 1};
       default:
         throw new Error();
     }
@@ -183,7 +183,7 @@ export const Player: React.FC<{
                     <p key={i}
                         className={t.classList.join(" ")}
                         style={{
-                            animationDelay: t.delay + 'ms'
+                            animationDelay: (t.delay as number)*200 + 'ms'
                         }}
                     >{t.text}</p>
                 ))}
@@ -193,7 +193,7 @@ export const Player: React.FC<{
                         key={`choice-${choiceHistory.length}-${c.index}`}
                         className="choice" 
                         style={{
-                                animationDelay: c.delay + 'ms'
+                                animationDelay: (c.delay as number)*200 + 'ms'
                             }}
                             >
                             <a href="#" onClick={choiceOnChoose(c.index)}>{c.text}</a>
