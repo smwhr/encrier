@@ -3,7 +3,7 @@ import { JsonFileHandler } from "./FileHandler";
 export const FileManager = (props:{visible: boolean, fileHandler: JsonFileHandler}) => {
     const {visible, fileHandler} = props;
 
-    const files = Object.keys(fileHandler.fileHierarchy).map(fname => fname.replace("inmemory://model/", ""))
+    const files = Object.keys(fileHandler.fileHierarchy).map(fname => fname.replace("file:///", ""))
 
     return (
         <div className={`split-view-view ${visible ? 'visible' : ''} files-bar`}

@@ -45,7 +45,7 @@ Another castle
 
     const [decorations, setDecorations] = useState([])
 
-    const [fileHandler, setFileHandler] = useState(new JsonFileHandler({'inmemory://model/1': defaultPrompt}))
+    const [fileHandler, setFileHandler] = useState(new JsonFileHandler({'file:///default.ink': defaultPrompt}))
 
     /*
      * Decorate gutter and lines on error
@@ -141,9 +141,9 @@ Another castle
 
     const openInk = (editor: any, monaco: any) => () => {
       openFile().then( ({filename, content}) => {
-        console.log(content)
-        var newmodel = monaco.editor.createModel(content, "ink", `inmemory://model/${filename}`);
+        var newmodel = monaco.editor.createModel(content, "ink", `file:///${filename}`);
         const model = editor.getModel();
+        debugger;
         model.dispose()
         editor.setModel(newmodel)
         fileHandler.delete(`${model.uri}`)
@@ -230,6 +230,7 @@ Another castle
               width="100%"
               defaultValue={ink}
               language="ink"
+              path="default.ink"
               onChange={onChange}
               onMount={handleEditorDidMount}
               options={{

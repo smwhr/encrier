@@ -7,15 +7,15 @@ export class JsonFileHandler implements IFileHandler {
     constructor(public readonly fileHierarchy: Record<string, string>) {}
   
     readonly ResolveInkFilename = (filename: string): string => {
-      if (Object.keys(this.fileHierarchy).includes(`inmemory://model/${filename}`)) return filename;
+      if (Object.keys(this.fileHierarchy).includes(`file:///${filename}`)) return filename;
       throw new FileHandlerError(
         `RUNTIME ERROR: '${filename}' line 0: Cannot locate file ${filename}.`
       );
     };
   
     readonly LoadInkFileContents = (filename: string): string => {
-      if (Object.keys(this.fileHierarchy).includes(`inmemory://model/${filename}`)) {
-        return this.fileHierarchy[`inmemory://model/${filename}`];
+      if (Object.keys(this.fileHierarchy).includes(`file:///${filename}`)) {
+        return this.fileHierarchy[`file:///${filename}`];
       } else {
         throw new FileHandlerError(
             `RUNTIME ERROR: '${filename}' line 0: Cannot open file ${filename}.`
