@@ -4,6 +4,8 @@ import { IFileHandler } from "inkjs/compiler/IFileHandler";
 export class FileHandlerError extends Error{}
 
 export class JsonFileHandler implements IFileHandler {
+    public _activeFile: string = "file:///default.ink";
+
     constructor(public readonly fileHierarchy: Record<string, string>) {}
   
     readonly ResolveInkFilename = (filename: string): string => {
@@ -30,6 +32,12 @@ export class JsonFileHandler implements IFileHandler {
 
     readonly delete = (filename: string): JsonFileHandler => {
         delete this.fileHierarchy[filename];
+        return this;
+    }
+
+    readonly active = (filename?: string): JsonFileHandler | string => {
+        if(filename === undefined) return this._activeFile;
+        this._activeFile = filename;
         return this;
     }
   }

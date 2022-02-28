@@ -82,6 +82,10 @@ code {
 .files-bar .monaco-list-row{
   position: relative;
   cursor: pointer;
+  line-height: 30px;
+}
+.files-bar .monaco-list-row.highlight{
+  background-color: #454545;
 }
 .files-bar .monaco-icon-label{
   color: #ccc;

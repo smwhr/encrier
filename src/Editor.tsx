@@ -143,20 +143,21 @@ Another castle
       openFile().then( ({filename, content}) => {
         var newmodel = monaco.editor.createModel(content, "ink", `file:///${filename}`);
         const model = editor.getModel();
-        debugger;
         model.dispose()
         editor.setModel(newmodel)
-        fileHandler.delete(`${model.uri}`)
+        fileHandler//.delete(`${model.uri}`)
                    .update(`${newmodel.uri}`, ink)
+                   .active(`${newmodel.uri}`)
         setInk(content as string)
         setFileHandler(fileHandler);
       })
     }
 
-    const exportJson = () => {
+    const exportJson = (editor: any) => () => {
       if(innerStory){
         const blob = new Blob([innerStory.ToJson() as string], { type: "application/json" });
-        saveAs(blob, "main.ink.json");
+        const model = editor.getModel();
+        saveAs(blob, `${model.uri}.json`.replace("file:///",""));
       }else{
         alert("There are errors to fix first.")
       }
@@ -182,7 +183,7 @@ Another castle
         keybindings: [
             monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KEY_S,
         ],
-        run: exportJson
+        run: exportJson(editor)
       })
 
       const save_story_action = editor.addAction({
@@ -218,10 +219,23 @@ Another castle
       });
 
     }
+
+    const setActiveFile = (editor: any) => (filename: string) => () => {
+      console.log(editor, filename)
+      if(editor === null) return;
+      fileHandler.active(filename)
+      setFileHandler(fileHandler);
+    }
+    const activeFile = fileHandler.active() as string;
     
     return (
       <div className={`editor-wrapper ${className} ${showFileManager ? 'with-filemanager' : ''}`}>
-            <FileManager visible={showFileManager} fileHandler={fileHandler}/>
+            <FileManager 
+                visible={showFileManager} 
+                fileHandler={fileHandler}
+                active={activeFile}
+                setActiveFile={setActiveFile(editorRef.current)}
+            />
 
             <MonacoEditor
               className="editor"
