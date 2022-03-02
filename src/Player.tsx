@@ -91,6 +91,19 @@ export const Player: React.FC<{
         }, 0)
         
     }
+    
+    const promptKnot = () => {
+        const knotname = window.prompt("Knot name ?")
+        if(knotname !== null)
+            return gotoKnot(knotname)
+    }
+
+    const gotoKnot = (knotname: string) => {
+        if(playedStory === null) return;
+        dispatch({type: "clear_choices"});
+        playedStory.ChoosePathString(knotname);
+        continueStory(playedStory, dispatch);
+    }
 
     useEffect(() => {
             setPlayedStory(story)
@@ -170,11 +183,18 @@ export const Player: React.FC<{
             <div className="toolbar ">
                 <div className="actions-container">
                     <div className="action-item icon">
+                        <a className="action-label codicon codicon-debug-step-into" 
+                                style={{color: "rgb(248, 248, 242)"}}
+                                onClick={promptKnot}
+                        ></a>
+                    </div>
+                    <div className="action-item icon">
                         <a className="action-label codicon codicon-debug-step-back" 
                                 style={{color: "rgb(248, 248, 242)"}}
                                 onClick={rewindHistory}
                         ></a>
                     </div>
+                    
                 </div>
                 
             </div>

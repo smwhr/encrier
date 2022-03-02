@@ -69,6 +69,10 @@ code {
 .codicon-debug-step-back:before {
   content: "\eb8f";
 }
+
+.codicon-debug-step-into:before{
+  content: "\ead4";
+}
 .monaco-editor .margin {
   background-color: #242424 !important;
   width: 18px !important;
