@@ -188,9 +188,11 @@ p.no-animation{
 @keyframes appear {
   from {
     opacity: 0;
+    transform: translate(15px, 0);
   }
   to {
     opacity: 1;
+    transform: translate(0, 0);
   }
 }
 
