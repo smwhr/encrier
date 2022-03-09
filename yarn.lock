@@ -561,7 +561,7 @@ has@^1.0.3:
 
 "inkjs@git+https://github.com/smwhr/inkjs.git#compiler":
   version "2.1.0"
-  resolved "git+https://github.com/smwhr/inkjs.git#fbd9ddccb54f682d9f73391913ef66bbc153a7bb"
+  resolved "git+https://github.com/smwhr/inkjs.git#b4365baf7669a8d44acf08798348f64f87db838c"
 
 is-core-module@^2.8.1:
   version "2.8.1"
