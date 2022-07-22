@@ -106,6 +106,10 @@ export const Player: React.FC<{
     }
 
     useEffect(() => {
+            if(story){
+                story.onError = (e) => console.error(e);
+                
+            }
             setPlayedStory(story)
     }, [story])
 
